@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dontpad | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #0b0e14; color: white; min-height: 100vh; overflow-x: hidden; }
+        #particles-js { position: fixed; width: 100%; height: 100%; z-index: 1; }
+        .container { position: relative; z-index: 2; padding: 40px; max-width: 1200px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
+        .nav-btns { display: flex; gap: 15px; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-add { background: #3b82f6; color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-exit { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-exit:hover { background: #ef4444; color: white; }
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .project-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 20px; transition: 0.3s; }
+        .project-card:hover { border-color: #3b82f6; transform: translateY(-5px); }
+        .project-card span { color: #3b82f6; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .btn-entrar { display: block; width: 100%; text-align: center; background: #fff; color: #000; text-decoration: none; padding: 10px; border-radius: 10px; font-weight: 600; margin-top: 15px; }
+        
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
+        .modal-content { background: #161b22; padding: 40px; border-radius: 24px; width: 95%; max-width: 600px; max-height: 85vh; overflow-y: auto; border: 1px solid #30363d; }
+        input, select, textarea { width: 100%; padding: 15px; margin: 10px 0; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 10px; outline: none; }
+        .file-entry { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid #3b82f6; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+        
+        /* Modal de Mensagem (Substituindo Alert) */
+        #msgModal .modal-content { max-width: 400px; text-align: center; }
+        .msg-icon { font-size: 3rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <header>
+            <h1>dontpad</h1>
+            <div class="nav-btns">
+                <button class="btn-add" onclick="openModal('projectModal')">+ NOVO PROJETO</button>
+                <button class="btn-exit" onclick="openModal('exitModal')">SAIR</button>
+            </div>
+        </header>
+        <div class="project-grid" id="projectList"></div>
+    </div>
+
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <h2>Configurar Projeto</h2>
+            <input type="text" id="projName" placeholder="Nome do Projeto">
+            <select id="projLang" onchange="updateExtensions()">
+                <option value=".html">🌐 HTML</option>
+                <option value=".css">🎨 CSS</option>
+                <option value=".js">📜 JavaScript</option>
+                <option value=".jsx">⚛️ React</option>
+                <option value=".jsx">🚀 Next.js</option>
+                <option value=".py">🐍 Python</option>
+                <option value=".java">☕ Java</option>
+                <option value=".php">🐘 PHP</option>
+            </select>
+            <div id="filesContainer">
+                <div class="file-entry">
+                    <input type="text" placeholder="Nome do Arquivo" class="fileName" value="index.html">
+                    <textarea rows="4" placeholder="Cole o código aqui..." class="fileCode"></textarea>
+                </div>
+            </div>
+            <button class="btn-add" style="background: #238636; width: 100%;" onclick="addFileField()">+ ADICIONAR ARQUIVO</button>
+            <div class="actions">
+                <button class="btn-add" onclick="saveProject()">SALVAR TUDO</button>
+                <button class="btn-add" style="background: #30363d;" onclick="closeModal('projectModal')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="exitModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h2>Deseja sair?</h2>
+            <div class="actions">
+                <button class="btn-add" onclick="window.location.href='index.html'">SIM</button>
+                <button class="btn-add" style="background: #30363d;" onclick="closeModal('exitModal')">NÃO</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="msgModal" class="modal">
+        <div class="modal-content">
+            <div id="msgIcon" class="msg-icon">ℹ️</div>
+            <h3 id="msgTitle">Mensagem</h3>
+            <p id="msgText" style="margin-top: 10px; color: #8b949e;"></p>
+            <button class="btn-add" style="margin-top: 20px; width: 100%;" onclick="closeModal('msgModal')">OK</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnYLjBFGwMq4oZcfcdNcuijmLYKykQEuA",
+            authDomain: "dondpad-b8d61.firebaseapp.com",
+            projectId: "dondpad-b8d61",
+            storageBucket: "dondpad-b8d61.firebasestorage.app",
+            messagingSenderId: "239814047608",
+            appId: "1:239814047608:web:dc7ec62b28587e0109ba8d",
+            measurementId: "G-XNXSSBN0H8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função para mostrar mensagens sem usar alert()
+        window.showMessage = (titulo, texto, tipo = 'info') => {
+            const icons = { 'success': '✅', 'error': '❌', 'info': 'ℹ️' };
+            document.getElementById('msgIcon').innerText = icons[tipo] || 'ℹ️';
+            document.getElementById('msgTitle').innerText = titulo;
+            document.getElementById('msgText').innerText = texto;
+            openModal('msgModal');
+        };
+
+        window.updateExtensions = () => {
+            const ext = document.getElementById('projLang').value;
+            document.querySelectorAll('.fileName').forEach(input => {
+                if(!input.value.includes('.')) input.value = "arquivo" + ext;
+                else input.value = input.value.split('.')[0] + ext;
+            });
+        };
+
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+        
+        window.addFileField = () => {
+            const ext = document.getElementById('projLang').value;
+            const container = document.getElementById('filesContainer');
+            const div = document.createElement('div');
+            div.className = 'file-entry';
+            div.innerHTML = `<input type="text" value="arquivo${ext}" class="fileName"><textarea rows="4" placeholder="Cole o código aqui..." class="fileCode"></textarea>`;
+            container.appendChild(div);
+        };
+
+        window.saveProject = async () => {
+            const name = document.getElementById('projName').value;
+            const lang = document.getElementById('projLang').options[document.getElementById('projLang').selectedIndex].text;
+            const fileNames = document.querySelectorAll('.fileName');
+            const fileCodes = document.querySelectorAll('.fileCode');
+            let files = [];
+            fileNames.forEach((input, i) => { if(input.value) files.push({ n: input.value, c: fileCodes[i].value }); });
+
+            if(!name || files.length === 0) {
+                return showMessage("Erro", "Por favor, preencha o nome do projeto e adicione arquivos.", "error");
+            }
+
+            try {
+                await addDoc(collection(db, "projetos"), { nome: name, lang: lang, files: files, ts: Date.now() });
+                
+                // Mostrar sucesso antes de recarregar
+                showMessage("Sucesso", "Projeto salvo com sucesso!", "success");
+                setTimeout(() => location.reload(), 1500);
+                
+            } catch (e) { 
+                showMessage("Erro", "Falha ao conectar com o banco de dados.", "error");
+            }
+        };
+
+        async function load() {
+            const q = query(collection(db, "projetos"), orderBy("ts", "desc"));
+            const snap = await getDocs(q);
+            const list = document.getElementById('projectList');
+            snap.forEach((doc) => {
+                const d = doc.data();
+                list.innerHTML += `<div class="project-card"><span>${d.lang}</span><h3>${d.nome}</h3><a href="projetos.html?id=${doc.id}" class="btn-entrar">ENTRAR</a></div>`;
+            });
+        }
+        load();
+    </script>
+    
+    <script>
+        // O script do particles-js permanece intocado conforme solicitado
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { 
+                    "value": 100, 
+                    "density": { "enable": true, "value_area": 800 } 
+                },
+                "color": { "value": "#3b82f6" },
+                "shape": { "type": "circle" },
+                "opacity": { 
+                    "value": 0.5, 
+                    "random": true, 
+                    "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } 
+                },
+                "size": { 
+                    "value": 3, 
+                    "random": true, 
+                    "anim": { "enable": true, "speed": 4, "size_min": 0.3, "sync": false } 
+                },
+                "line_linked": { 
+                    "enable": true, 
+                    "distance": 150, 
+                    "color": "#3b82f6", 
+                    "opacity": 0.3, 
+                    "width": 1 
+                },
+                "move": { 
+                    "enable": true, 
+                    "speed": 2, 
+                    "direction": "none", 
+                    "random": true, 
+                    "straight": false, 
+                    "out_mode": "out", 
+                    "bounce": false,
+                    "attract": { "enable": true, "rotateX": 600, "rotateY": 1200 }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": { 
+                    "onhover": { "enable": true, "mode": "grab" }, 
+                    "onclick": { "enable": true, "mode": "push" }, 
+                    "resize": true 
+                },
+                "modes": { 
+                    "grab": { "distance": 250, "line_linked": { "opacity": 1 } },
+                    "push": { "particles_nb": 4 }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+</body>
+</html>

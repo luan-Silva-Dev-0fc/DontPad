@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dontpad | Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body, html { 
+            height: 100%; overflow: hidden; 
+            background: #0f172a;
+            transition: opacity 0.8s ease-in-out; 
+        }
+        #particles-js { position: absolute; width: 100%; height: 100%; z-index: 1; }
+        .content-wrapper {
+            position: relative; z-index: 2;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px 80px; border-radius: 25px;
+            text-align: center; cursor: pointer;
+            transition: all 0.4s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #fff; font-size: 5rem; font-weight: 800;
+            background: linear-gradient(45deg, #fff, #3b82f6);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        p { color: #94a3b8; letter-spacing: 4px; font-size: 0.7rem; margin-top: 10px; }
+        .fade-out { opacity: 0; }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="content-wrapper">
+        <div class="glass-card" onclick="entrar()">
+            <h1>dontpad</h1>
+            <p>CLIQUE PARA ACESSAR</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 100 },
+                "color": { "value": "#3b82f6" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5 },
+                "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#3b82f6", "opacity": 0.4, "width": 1 },
+                "move": { "enable": true, "speed": 2 }
+            },
+            "interactivity": {
+                "events": { "onhover": { "enable": true, "mode": "grab" } },
+                "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 1 } } }
+            }
+        });
+
+        function entrar() {
+            document.body.classList.add('fade-out');
+            setTimeout(() => {
+                
+                window.location.href = "inicio.html"; 
+            }, 800);
+        }
+    </script>
+</body>
+</html>
