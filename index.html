@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>DontPad</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0b0e14" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    /* Previne scrolls indesejados no mobile */
+    overflow: hidden; 
+    background: #0b0e14;
+    /* Suporte para safe areas (entalhes/notches de iPhones novos) */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    /* Garante que o iframe ocupe o espaço restante */
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  #install-banner {
+    display: none;
+    position: fixed;
+    /* Ajuste de posição para mobile */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px); /* Margem dinâmica lateral */
+    max-width: 400px;
+    background: rgba(22, 27, 34, 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); /* Suporte para Safari/iOS */
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    padding: clamp(15px, 4vw, 25px); /* Padding adaptável */
+    border-radius: 20px;
+    z-index: 9999;
+    color: white;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    /* Animação suave ao aparecer */
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { transform: translate(-50%, 100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  #install-banner p {
+    margin-bottom: 15px;
+    font-size: clamp(0.85rem, 2.5vw, 1rem); /* Fonte fluida */
+    line-height: 1.4;
+  }
+
+  #btn-install {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    /* Feedback tátil para mobile */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #btn-install:active {
+    transform: scale(0.97);
+    background: #2563eb;
+  }
+
+  /* Media query para telas muito curtas (paisagem no mobile) */
+  @media (max-height: 450px) {
+    #install-banner {
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      bottom: 10px;
+      max-width: 90%;
+      padding: 10px 20px;
+    }
+    #install-banner p { margin: 0; margin-right: 15px; }
+    #btn-install { width: auto; padding: 8px 15px; }
+  }
+</style>
+  </head>
+  <body>
+    <div id="install-banner">
+      <p>📱 Para uma melhor experiência, instale o app no seu dispositivo.</p>
+      <button id="btn-install">INSTALAR AGORA</button>
+    </div>
+
+    <iframe src="tela.html"></iframe>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("sw.js")
+          .then(() => console.log("Service Worker Ativo"))
+          .catch((err) => console.log("Erro no SW:", err));
+      }
+
+      let deferredPrompt;
+      const installBanner = document.getElementById("install-banner");
+      const installBtn = document.getElementById("btn-install");
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+
+        deferredPrompt = e;
+
+        installBanner.style.display = "block";
+      });
+
+      installBtn.addEventListener("click", async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === "accepted") {
+            console.log("Usuário aceitou a instalação");
+          }
+          deferredPrompt = null;
+          installBanner.style.display = "none";
+        }
+      });
+
+      window.addEventListener("appinstalled", () => {
+        installBanner.style.display = "none";
+        console.log("PWA instalado com sucesso");
+      });
+    </script>
+  </body>
+</html>
