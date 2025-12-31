@@ -15,10 +15,11 @@
         .info-data { font-size: 0.8rem; color: #3b82f6; font-weight: 600; margin-top: 5px; }
         
         .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 0.75rem; }
-        .btn-edit-mode { background: #f59e0b; color: #000; } /* Cor Laranja para Modo Edição */
-        .btn-save { background: #238636; color: white; display: none; } /* Escondido por padrão */
+        .btn-edit-mode { background: #f59e0b; color: #000; } 
+        .btn-save { background: #238636; color: white; display: none; }
         .btn-copy { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid #3b82f6; }
         .btn-delete { background: #da3633; color: white; }
+        .btn-download { background: #3b82f6; color: white; }
         .btn-back { background: transparent; border: 1px solid #30363d; color: white; margin-bottom: 10px; }
 
         .file-section { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid #30363d; border-radius: 15px; padding: 25px; margin-bottom: 30px; transition: 0.3s; }
@@ -46,9 +47,10 @@
                 <h1 id="projTitle">Carregando...</h1>
                 <p id="lastUpdate" class="info-data"></p>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button id="btnEdit" class="btn btn-edit-mode" onclick="enableEditing()">✎ Editar Código</button>
-                <button id="btnSave" class="btn btn-save" onclick="updateProject()">💾 Salvar Alterações</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                <button class="btn btn-download" onclick="downloadProject()">📥 Baixar ZIP</button>
+                <button id="btnEdit" class="btn btn-edit-mode" onclick="enableEditing()">✎ Editar</button>
+                <button id="btnSave" class="btn btn-save" onclick="updateProject()">💾 Salvar</button>
                 <button class="btn btn-delete" onclick="openModal('deleteModal')">Excluir</button>
             </div>
         </header>
@@ -74,7 +76,9 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
@@ -96,7 +100,6 @@
         window.openModal = (id) => document.getElementById(id).style.display = 'flex';
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-        // ATIVA MODO EDIÇÃO
         window.enableEditing = () => {
             document.getElementById('bodyTag').classList.add('editing');
             document.querySelectorAll('.code-editor, .filename-edit').forEach(el => el.readOnly = false);
@@ -136,18 +139,37 @@
 
             try {
                 await updateDoc(doc(db, "projetos", projectId), { files, lastEdit: now });
-                
-                // Feedback visual de sucesso
                 document.getElementById('successMsg').innerText = `As alterações foram salvas com sucesso às ${now.split(',')[1]}.`;
                 openModal('successModal');
-                
-                // Reseta interface
                 document.getElementById('bodyTag').classList.remove('editing');
                 document.querySelectorAll('.code-editor, .filename-edit').forEach(el => el.readOnly = true);
                 document.getElementById('btnEdit').style.display = 'inline-block';
                 document.getElementById('btnSave').style.display = 'none';
                 document.getElementById('lastUpdate').innerText = `Editado em: ${now} ✅`;
             } catch (e) { alert("Erro ao salvar."); }
+        };
+
+        // NOVA FUNÇÃO: BAIXAR ARQUIVOS EM ZIP
+        window.downloadProject = async () => {
+            const zip = new JSZip();
+            const projectName = document.getElementById('projTitle').innerText || "projeto";
+            const names = document.querySelectorAll('.filename-edit');
+            const codes = document.querySelectorAll('.code-editor');
+
+            // Cria uma pasta dentro do ZIP com o nome do projeto
+            const folder = zip.folder(projectName);
+
+            names.forEach((n, i) => {
+                const fileName = n.value || `arquivo_${i}.txt`;
+                const content = codes[i].value;
+                folder.file(fileName, content);
+            });
+
+            const blob = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${projectName}.zip`;
+            link.click();
         };
 
         window.copyCode = (i) => {
